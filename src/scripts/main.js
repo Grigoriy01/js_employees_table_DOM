@@ -37,7 +37,7 @@ tbodyContainer.addEventListener('click', (checkedRow) => {
 
   const currActive = tbodyContainer.querySelector('.active');
 
-  if (currActive) {
+  if (currActive || !targetRow) {
     currActive.classList.remove('active');
   }
 
@@ -123,8 +123,8 @@ const notification = (typeStatus, titleInput) => {
     [success]: 'You have added successfully',
     [error]: {
       [colName]: 'The name is less than four letters long',
-
       [age]: 'Your age does not match',
+      [position]: 'The field is empty',
     },
   };
 
@@ -133,9 +133,9 @@ const notification = (typeStatus, titleInput) => {
   const finalTextMessage = typeStatus === success ? textSuccess : textError;
 
   const createMessage = `
-    <div class="notification">
+    <div class="notification ${typeStatus}" data-qa="notification">
       <h2 class="title">${typeStatus}</h2>
-      <p class="${typeStatus}">
+      <p>
           ${finalTextMessage}
       </p>
     </div>
@@ -154,27 +154,27 @@ const notification = (typeStatus, titleInput) => {
 const formHtml = `
   <form action="#" class="new-employee-form">
     <label>Name:
-      <input name="name" data-qa = "name" type="text" required>
+      <input name="name" data-qa = "name" type="text">
     </label>
 
     <label>Position:
-      <input name="office" data-qa = "office" type="text" required>
+      <input name="position" data-qa = "position" type="text">
     </label>
 
     <label>Office:
-      <select name="position" data-qa = "position" required>
+      <select name="office" data-qa = "office" required>
 
-        <option value="tokyo">Tokyo</option>
-        <option value="singapore ">Singapore</option>
-        <option value="london">London</option>
-        <option value="new York">New York</option>
-        <option value="edinburgh">Edinburgh</option>
-        <option value="san Francisco">San Francisco</option>
+        <option value="Tokyo">Tokyo</option>
+        <option value="Singapore">Singapore</option>
+        <option value="London">London</option>
+        <option value="New York">New York</option>
+        <option value="Edinburgh">Edinburgh</option>
+        <option value="San Francisco">San Francisco</option>
       </select>
     </label>
 
     <label>Age:
-      <input name="age" data-qa = "age" type="number" required>
+      <input name="age" data-qa = "age" type="number">
     </label>
 
     <label>Salary:
@@ -192,15 +192,8 @@ bodyContainer.insertAdjacentHTML('beforeend', formHtml);
 const myForm = document.querySelector('.new-employee-form');
 
 // Listener for save to table
-myForm.addEventListener('click', (e) => {
+myForm.addEventListener('submit', (e) => {
   e.preventDefault();
-
-  // var for form
-  const checkedSave = e.target.closest('#btn-save');
-
-  if (!checkedSave) {
-    return;
-  }
 
   const inputName = myForm.elements.name.value;
   const inputPos = myForm.elements.position.value;
@@ -209,13 +202,16 @@ myForm.addEventListener('click', (e) => {
   const inputSalary = myForm.elements.salary.value;
 
   // input validetion logic
-
-  if (inputName.length < 4) {
+  if (inputName.length < 4 || inputName === '') {
     return notification(error, colName);
   }
 
-  if (+inputAge < 18 || +inputAge > 90) {
+  if (+inputAge < 18 || +inputAge > 90 || inputAge === '') {
     return notification(error, age);
+  }
+
+  if (inputPos === '') {
+    return notification(error, position);
   }
 
   const formatedSalary = Number(inputSalary).toLocaleString('en-US', {
@@ -237,4 +233,5 @@ myForm.addEventListener('click', (e) => {
 
   notification(success);
   tbodyContainer.insertAdjacentHTML('afterbegin', newString);
+  myForm.reset();
 });
