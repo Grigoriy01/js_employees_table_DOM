@@ -235,3 +235,38 @@ myForm.addEventListener('submit', (e) => {
   tbodyContainer.insertAdjacentHTML('afterbegin', newString);
   myForm.reset();
 });
+
+// Listener The Editer cells
+tbodyContainer.addEventListener('dblclick', (e) => {
+  const checkedRow = e.target.closest('td');
+  const currentVal = checkedRow.textContent;
+
+  if (!checkedRow) {
+    return;
+  }
+
+  const inputCell = document.createElement('input');
+
+  inputCell.value = checkedRow.textContent;
+  checkedRow.replaceChildren(inputCell);
+  inputCell.focus();
+
+  inputCell.addEventListener('blur', () => {
+    const newValue = inputCell.value.trim();
+    const finalText = newValue === '' ? currentVal : newValue;
+
+    checkedRow.innerHTML = '';
+    checkedRow.textContent = finalText;
+  });
+
+  inputCell.addEventListener('keydown', (ePush) => {
+    const newValue = inputCell.value.trim();
+
+    const finalText = newValue === '' ? currentVal : newValue;
+
+    if (ePush.key === 'Enter') {
+      checkedRow.innerHTML = '';
+      checkedRow.textContent = finalText;
+    }
+  });
+});
