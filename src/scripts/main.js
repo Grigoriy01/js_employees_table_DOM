@@ -2,16 +2,16 @@
 
 // write code here
 const headers = document.querySelector('thead');
-const headersItemes = [...headers.querySelectorAll('th')];
+const headersItems = [...headers.querySelectorAll('th')];
 const tbodyContainer = document.querySelector('tbody');
 const bodyContainer = document.querySelector('body');
 
 // var toString key-name for the normalize()
-const colName = headersItemes[0].textContent.toLowerCase().trim();
-const position = headersItemes[1].textContent.toLowerCase().trim();
-const office = headersItemes[2].textContent.toLowerCase().trim();
-const age = headersItemes[3].textContent.toLowerCase().trim();
-const salary = headersItemes[4].textContent.toLowerCase().trim();
+const colName = headersItems[0].textContent.toLowerCase().trim();
+const position = headersItems[1].textContent.toLowerCase().trim();
+const office = headersItems[2].textContent.toLowerCase().trim();
+const age = headersItems[3].textContent.toLowerCase().trim();
+const salary = headersItems[4].textContent.toLowerCase().trim();
 
 // var for notifications
 const error = 'error';
@@ -45,8 +45,8 @@ tbodyContainer.addEventListener('click', (checkedRow) => {
 });
 
 // --- the fun.clean values of cells
-const getCleanValue = (iteme, index) => {
-  const cleanValue = iteme.cells[index].textContent;
+const getCleanValue = (item, index) => {
+  const cleanValue = item.cells[index].textContent;
 
   return Number(cleanValue.replace(/[$,]/g, ''));
 };
@@ -109,6 +109,7 @@ const notification = (typeStatus, titleInput) => {
   const textSuccess = valueNotif.success;
   const textError = valueNotif[typeStatus][titleInput];
   const finalTextMessage = typeStatus === success ? textSuccess : textError;
+  const oldMessage = document.querySelector('.notification');
 
   const createMessage = `
     <div class="notification ${typeStatus}" data-qa="notification">
@@ -121,14 +122,18 @@ const notification = (typeStatus, titleInput) => {
 
   bodyContainer.insertAdjacentHTML('afterbegin', createMessage);
 
+  if (oldMessage) {
+    oldMessage.remove();
+  }
+
   setTimeout(() => {
     const alertMessage = document.querySelector('.notification');
 
-    alertMessage.style.visibility = 'hidden';
+    alertMessage.remove();
   }, 2000);
 };
 
-// --- the func. input validetion logic
+// --- the func. input validation logic
 function validateFormInputs(
   nameField,
   posField,
@@ -171,10 +176,10 @@ function validateFormInputs(
 
 // Listener 'click sort_asc->desc'
 headers.addEventListener('click', (checked) => {
-  const checkedIteme = checked.target.closest('th');
-  const checkedValue = checkedIteme.textContent.toLowerCase();
+  const checkedItem = checked.target.closest('th');
+  const checkedValue = checkedItem.textContent.toLowerCase();
 
-  if (!checkedIteme) {
+  if (!checkedItem) {
     return;
   }
 
@@ -257,7 +262,7 @@ myForm.addEventListener('submit', (e) => {
   const inputAge = myForm.elements.age.value.trim();
   const inputSalary = myForm.elements.salary.value.trim();
 
-  // input validetion logic
+  // input validation logic
   const validForm = validateFormInputs(
     inputName,
     inputPos,
@@ -296,12 +301,17 @@ myForm.addEventListener('submit', (e) => {
 tbodyContainer.addEventListener('dblclick', (e) => {
   const checkedRow = e.target.closest('td');
   const currentVal = checkedRow.textContent;
+  const activeInput = document.querySelector('.cell-input');
 
   if (!checkedRow) {
     return;
   }
 
-  if (e.target.closest('input')) {
+  if (activeInput) {
+    activeInput.blur();
+  }
+
+  if (e.target.closest('.cell-input')) {
     return;
   }
 
