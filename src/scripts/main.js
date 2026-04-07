@@ -7,11 +7,11 @@ const tbodyContainer = document.querySelector('tbody');
 const bodyContainer = document.querySelector('body');
 
 // var toString key-name for the normalize()
-const colName = headersItemes[0].textContent.toLowerCase();
-const position = headersItemes[1].textContent.toLowerCase();
-const office = headersItemes[2].textContent.toLowerCase();
-const age = headersItemes[3].textContent.toLowerCase();
-const salary = headersItemes[4].textContent.toLowerCase();
+const colName = headersItemes[0].textContent.toLowerCase().trim();
+const position = headersItemes[1].textContent.toLowerCase().trim();
+const office = headersItemes[2].textContent.toLowerCase().trim();
+const age = headersItemes[3].textContent.toLowerCase().trim();
+const salary = headersItemes[4].textContent.toLowerCase().trim();
 
 // var for notifications
 const error = 'error';
@@ -44,14 +44,14 @@ tbodyContainer.addEventListener('click', (checkedRow) => {
   targetRow.classList.add('active');
 });
 
-// the fun.clean values of cells
+// --- the fun.clean values of cells
 const getCleanValue = (iteme, index) => {
   const cleanValue = iteme.cells[index].textContent;
 
   return Number(cleanValue.replace(/[$,]/g, ''));
 };
 
-// the fun. normalize
+// --- the fun. normalize
 function normalizeList(row) {
   return row.map((el) => {
     return {
@@ -65,66 +65,44 @@ function normalizeList(row) {
   });
 }
 
-// the fun. control of state a flag of the Obj
-const flags = {
-  [colName]: undefined,
-  [position]: undefined,
-  [office]: undefined,
-  [age]: undefined,
-  [salary]: undefined,
+// --- the fun. control of state a flag of the Obj
+const getInitialFlags = () => {
+  return {
+    [colName]: asc,
+    [position]: asc,
+    [office]: asc,
+    [age]: asc,
+    [salary]: asc,
+  };
 };
+
+let memoryCurrTitle;
+
+let flags = getInitialFlags();
 
 const getControlStateFlag = (checkedTitle) => {
-  flags[checkedTitle] = flags[checkedTitle] === asc ? desc : asc;
+  if (checkedTitle === memoryCurrTitle) {
+    flags[checkedTitle] = flags[checkedTitle] === asc ? desc : asc;
 
-  return flags[checkedTitle];
+    return flags[checkedTitle];
+  } else {
+    memoryCurrTitle = checkedTitle;
+    flags = getInitialFlags();
+
+    return asc;
+  }
 };
 
-// Listener 'click sort_asc->desc'
-headers.addEventListener('click', (checked) => {
-  const checkedIteme = checked.target.closest('th');
-  const checkedValue = checkedIteme.textContent.toLowerCase();
-
-  if (!checkedIteme) {
-    return;
-  }
-
-  const currentData = normalizeList(getRowsLenght());
-
-  // the func. sortList
-  function getSortList(data, key) {
-    // callback tool-Numbers
-    const sortNumber = (a, b) => a[key] - b[key];
-    const sortString = (a, b) => a[key].localeCompare(b[key]);
-    const isAsc = getControlStateFlag(checkedValue);
-
-    const selectedTools =
-      typeof data[0][key] === 'number' ? sortNumber : sortString;
-
-    const newList = data.sort((a, b) => {
-      const callbackResult = selectedTools(a, b);
-
-      return isAsc === asc ? callbackResult : callbackResult * -1;
-    });
-
-    newList.forEach((el) => {
-      return tbodyContainer.append(el.node);
-    });
-
-    return newList;
-  }
-
-  getSortList(currentData, checkedValue);
-});
-
-// the func. create notifications
+// --- the func. create notifications
 const notification = (typeStatus, titleInput) => {
   const valueNotif = {
     [success]: 'You have added successfully',
     [error]: {
-      [colName]: 'The name is less than four letters long',
+      [colName]: 'The name is emty or less than four letters long',
       [age]: 'Your age does not match',
-      [position]: 'The field is empty',
+      [position]: 'The field "Position" is empty',
+      [office]: 'The field "Office" is empty',
+      [salary]: 'The field "Salary" is empty',
     },
   };
 
@@ -150,6 +128,84 @@ const notification = (typeStatus, titleInput) => {
   }, 2000);
 };
 
+// --- the func. input validetion logic
+function validateFormInputs(
+  nameField,
+  posField,
+  officeField,
+  ageField,
+  salaryField,
+) {
+  if (nameField.length < 4) {
+    notification(error, colName);
+
+    return false;
+  }
+
+  if (posField === '') {
+    notification(error, position);
+
+    return false;
+  }
+
+  if (officeField === '') {
+    notification(error, office);
+
+    return false;
+  }
+
+  if (+ageField < 18 || +ageField > 90 || ageField === '') {
+    notification(error, age);
+
+    return false;
+  }
+
+  if (salaryField === '') {
+    notification(error, salary);
+
+    return false;
+  }
+
+  return true;
+}
+
+// Listener 'click sort_asc->desc'
+headers.addEventListener('click', (checked) => {
+  const checkedIteme = checked.target.closest('th');
+  const checkedValue = checkedIteme.textContent.toLowerCase();
+
+  if (!checkedIteme) {
+    return;
+  }
+
+  const currentData = normalizeList(getRowsLenght());
+
+  // --- the func. sortList
+  function getSortList(data, key) {
+    // callback tool-Numbers
+    const sortNumber = (a, b) => a[key] - b[key];
+    const sortString = (a, b) => a[key].localeCompare(b[key]);
+    const isAsc = getControlStateFlag(checkedValue);
+
+    const selectedTools =
+      typeof data[0][key] === 'number' ? sortNumber : sortString;
+
+    const newList = data.sort((a, b) => {
+      const callbackResult = selectedTools(a, b);
+
+      return isAsc === asc ? callbackResult : callbackResult * -1;
+    });
+
+    newList.forEach((el) => {
+      return tbodyContainer.append(el.node);
+    });
+
+    return newList;
+  }
+
+  getSortList(currentData, checkedValue);
+});
+
 // <--- create html form --->
 const formHtml = `
   <form action="#" class="new-employee-form">
@@ -162,7 +218,7 @@ const formHtml = `
     </label>
 
     <label>Office:
-      <select name="office" data-qa = "office" required>
+      <select name="office" data-qa = "office">
 
         <option value="Tokyo">Tokyo</option>
         <option value="Singapore">Singapore</option>
@@ -178,7 +234,7 @@ const formHtml = `
     </label>
 
     <label>Salary:
-      <input name="salary" data-qa = "salary" type="number" required>
+      <input name="salary" data-qa = "salary" type="number">
     </label>
 
     <button id="btn-save" type="submit">Save to table</button>
@@ -195,23 +251,23 @@ const myForm = document.querySelector('.new-employee-form');
 myForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  const inputName = myForm.elements.name.value;
-  const inputPos = myForm.elements.position.value;
-  const inputOffice = myForm.elements.office.value;
-  const inputAge = myForm.elements.age.value;
-  const inputSalary = myForm.elements.salary.value;
+  const inputName = myForm.elements.name.value.trim();
+  const inputPos = myForm.elements.position.value.trim();
+  const inputOffice = myForm.elements.office.value.trim();
+  const inputAge = myForm.elements.age.value.trim();
+  const inputSalary = myForm.elements.salary.value.trim();
 
   // input validetion logic
-  if (inputName.length < 4 || inputName === '') {
-    return notification(error, colName);
-  }
+  const validForm = validateFormInputs(
+    inputName,
+    inputPos,
+    inputOffice,
+    inputAge,
+    inputSalary,
+  );
 
-  if (+inputAge < 18 || +inputAge > 90 || inputAge === '') {
-    return notification(error, age);
-  }
-
-  if (inputPos === '') {
-    return notification(error, position);
+  if (!validForm) {
+    return;
   }
 
   const formatedSalary = Number(inputSalary).toLocaleString('en-US', {
@@ -245,9 +301,14 @@ tbodyContainer.addEventListener('dblclick', (e) => {
     return;
   }
 
+  if (e.target.closest('input')) {
+    return;
+  }
+
   const inputCell = document.createElement('input');
 
-  inputCell.value = checkedRow.textContent;
+  inputCell.classList.add('cell-input');
+  inputCell.value = currentVal;
   checkedRow.replaceChildren(inputCell);
   inputCell.focus();
 
